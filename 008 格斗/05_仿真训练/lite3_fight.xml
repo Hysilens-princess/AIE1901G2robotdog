@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mujoco model="lite3_fight">
+  <!-- Lite3 仿真：两台平面机身（速度级驱动），机身参数来自运动开发手册 V2.0.1
+       机身 11kg、548x370mm、高 118mm(Hup74+Hdown44)；jy_exe 负责步态/平衡，
+       高层策略只发 (vx,vy,wz)，故抽象成平面刚体(x,y平移+yaw旋转)，保留真实尺寸/质量/惯性。 -->
+  <compiler angle="radian" coordinate="local"/>
+
+  <option timestep="0.02" gravity="0 0 -9.81" integrator="implicitfast"/>
+
+  <default>
+    <joint armature="0.1" damping="0.5"/>
+    <geom friction="1.0 0.5 0.5" condim="3" solref="0.02 1"/>
+    <default class="dog">
+      <geom type="box" size="0.274 0.185 0.059"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <!-- 地面 -->
+    <geom name="floor" type="plane" size="5 5 0.1" rgba="0.82 0.82 0.82 1"/>
+    <!-- 5 米圆场地边界（可视化，半径 2.5m） -->
+    <geom name="boundary" type="cylinder" size="2.5 0.001" pos="0 0 0.0005"
+          rgba="1.0 0.6 0.0 0.25" contype="0" conaffinity="0"/>
+
+    <!-- EGO 我方（frame 在机身中心，qpos 即世界坐标） -->
+    <body name="ego" pos="0 0 0.33">
+      <joint name="ego_x"   type="slide" axis="1 0 0"/>
+      <joint name="ego_y"   type="slide" axis="0 1 0"/>
+      <joint name="ego_yaw" type="hinge" axis="0 0 1"/>
+      <geom name="ego_body" class="dog" mass="11" rgba="0.2 0.5 0.85 1"/>
+      <!-- 机头朝向标记 + IMU/射线挂点（+x 前向） -->
+      <site name="ego_nose"  pos="0.28 0 0.02"/>
+      <site name="ego_imu"   pos="0.05 0 0"/>
+      <geom name="ego_nose_g" type="box" size="0.02 0.02 0.02" pos="0.28 0 0.02"
+            rgba="0.1 0.3 0.6 1" contype="0" conaffinity="0"/>
+    </body>
+
+    <!-- OPP 对手 -->
+    <body name="opp" pos="0 0 0.33">
+      <joint name="opp_x"   type="slide" axis="1 0 0"/>
+      <joint name="opp_y"   type="slide" axis="0 1 0"/>
+      <joint name="opp_yaw" type="hinge" axis="0 0 1"/>
+      <geom name="opp_body" class="dog" mass="11" rgba="0.9 0.35 0.25 1"/>
+      <site name="opp_nose" pos="0.28 0 0.02"/>
+      <site name="opp_imu"  pos="0.05 0 0"/>
+      <geom name="opp_nose_g" type="box" size="0.02 0.02 0.02" pos="0.28 0 0.02"
+            rgba="0.6 0.2 0.1 1" contype="0" conaffinity="0"/>
+    </body>
+  </worldbody>
+
+  <sensor>
+    <!-- 各自机身的 IMU：线加速度 + 角速度（绕 z = yaw 率） -->
+    <accelerometer name="ego_acc"  site="ego_imu"/>
+    <gyro          name="ego_gyro" site="ego_imu"/>
+    <accelerometer name="opp_acc"  site="opp_imu"/>
+    <gyro          name="opp_gyro" site="opp_imu"/>
+  </sensor>
+
+  <!-- 无 actuator：速度由环境直接控制 qvel（+加速度限幅），对齐真机「速度指令→jy_exe ramp」 -->
+
+  <keyframe>
+    <!-- 初始站位：ego 在 (-1.2, 0)，机头朝 +x；opp 在 (1.2, 0)，机头朝 -x（面对） -->
+    <key name="start" qpos="-1.2 0 0  1.2 0 3.14159"/>
+  </keyframe>
+</mujoco>
