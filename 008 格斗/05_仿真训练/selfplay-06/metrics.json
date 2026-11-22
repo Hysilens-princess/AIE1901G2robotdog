@@ -1,0 +1,29 @@
+{
+  "random": {
+    "win": 0,
+    "lose": 0,
+    "contact": 0,
+    "timeout": 20,
+    "still": 0,
+    "n": 20
+  },
+  "runner": {
+    "win": 20,
+    "lose": 0,
+    "contact": 0,
+    "timeout": 0,
+    "still": 0,
+    "n": 20
+  },
+  "defender": {
+    "win": 20,
+    "lose": 0,
+    "contact": 0,
+    "timeout": 0,
+    "still": 0,
+    "n": 20
+  },
+  "total_timesteps": 1000000,
+  "wall_seconds": 919.1,
+  "device": "cpu"
+}
